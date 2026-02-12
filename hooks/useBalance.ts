@@ -32,17 +32,9 @@ export const useBalance = () => {
 
     fetchBalance();
 
-    // Set up a subscription for real-time updates
-    const subscriptionId = connection.onAccountChange(
-      smartWalletPubkey,
-      (accountInfo) => {
-        setBalance(accountInfo.lamports);
-      }
-    );
-
-    return () => {
-      connection.removeAccountChangeListener(subscriptionId);
-    };
+    // Polling every 60s instead of WebSocket to avoid WSS errors
+    const interval = setInterval(fetchBalance, 60000);
+    return () => clearInterval(interval);
   }, [smartWalletPubkey, connection]);
 
   return {

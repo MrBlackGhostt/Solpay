@@ -56,18 +56,24 @@ export const useTransactions = () => {
 
         setTransactions(formattedTxs);
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching transactions:", error);
+        // If rate limited, just keep existing transactions
+        if (error.message?.includes("429")) {
+          return;
+        }
+        setTransactions([]);
       } finally {
         setIsLoading(false);
       }
     };
 
+    // Only fetch once on mount
     fetchHistory();
     
-    // Refresh every 30s
-    const interval = setInterval(fetchHistory, 30000);
-    return () => clearInterval(interval);
+    // Disable auto-refresh for now to prevent 429 loops
+    // const interval = setInterval(fetchHistory, 60000);
+    // return () => clearInterval(interval);
 
   }, [smartWalletPubkey]);
 
