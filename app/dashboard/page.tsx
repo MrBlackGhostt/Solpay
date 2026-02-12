@@ -1,15 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useWallet } from "@lazorkit/wallet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet, ArrowUpRight, ArrowDownLeft, Users } from "lucide-react";
 import { ContactGrid } from "@/components/dashboard/ContactGrid";
 import { useContacts } from "@/hooks/useContacts";
 import { toast } from "sonner";
+import { SendModal } from "@/components/modals/SendModal";
+import { ReceiveModal } from "@/components/modals/ReceiveModal";
 
 export default function DashboardPage() {
   const { smartWalletPubkey } = useWallet();
   const { contacts, addContact, deleteContact } = useContacts();
+  
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
 
   const handleDeleteContact = (id: string) => {
     const result = deleteContact(id);
@@ -43,7 +49,10 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-surface/50 border-white/5 backdrop-blur-sm cursor-pointer hover:bg-surface/80 transition-colors group">
+        <Card 
+          className="bg-surface/50 border-white/5 backdrop-blur-sm cursor-pointer hover:bg-surface/80 transition-colors group"
+          onClick={() => setShowSendModal(true)}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Send Assets</CardTitle>
             <ArrowUpRight className="w-4 h-4 text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -54,7 +63,10 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-surface/50 border-white/5 backdrop-blur-sm cursor-pointer hover:bg-surface/80 transition-colors group">
+        <Card 
+          className="bg-surface/50 border-white/5 backdrop-blur-sm cursor-pointer hover:bg-surface/80 transition-colors group"
+          onClick={() => setShowReceiveModal(true)}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Receive Assets</CardTitle>
             <ArrowDownLeft className="w-4 h-4 text-secondary group-hover:-translate-x-0.5 group-hover:translate-y-0.5 transition-transform" />
@@ -101,6 +113,10 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      <SendModal open={showSendModal} onOpenChange={setShowSendModal} />
+      <ReceiveModal open={showReceiveModal} onOpenChange={setShowReceiveModal} />
     </div>
   );
 }
