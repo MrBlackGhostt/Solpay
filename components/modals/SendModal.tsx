@@ -61,10 +61,10 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       // Sign and send transaction
       const signature = await signAndSendTransaction({
         instructions: [transferInstruction],
-        transactionOptions: {
-          feeToken: "SOL",
-          computeUnitLimit: 500_000,
-        },
+        // transactionOptions: {
+        //   feeToken: "SOL",
+        //   computeUnitLimit: 500_000,
+        // },
       });
 
       // Update last used for contact
