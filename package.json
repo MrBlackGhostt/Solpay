@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@lazorkit/wallet": "^2.0.1",
+    "@solana/kit": "^6.0.1",
     "@solana/web3.js": "^1.98.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
