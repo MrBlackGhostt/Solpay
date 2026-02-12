@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useWallet } from "@lazorkit/wallet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, ArrowUpRight, ArrowDownLeft, Users } from "lucide-react";
+import { Wallet, ArrowUpRight, ArrowDownLeft, Users, Loader2 } from "lucide-react";
 import { ContactGrid } from "@/components/dashboard/ContactGrid";
 import { useContacts } from "@/hooks/useContacts";
+import { useBalance } from "@/hooks/useBalance";
 import { toast } from "sonner";
 import { SendModal } from "@/components/modals/SendModal";
 import { ReceiveModal } from "@/components/modals/ReceiveModal";
@@ -13,6 +14,7 @@ import { ReceiveModal } from "@/components/modals/ReceiveModal";
 export default function DashboardPage() {
   const { smartWalletPubkey } = useWallet();
   const { contacts, addContact, deleteContact } = useContacts();
+  const { sol, isLoading: isBalanceLoading } = useBalance();
   
   const [showSendModal, setShowSendModal] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
@@ -42,7 +44,13 @@ export default function DashboardPage() {
             <Wallet className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0.00 SOL</div>
+            <div className="text-2xl font-bold flex items-center gap-2">
+              {isBalanceLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              ) : (
+                `${sol.toFixed(4)} SOL`
+              )}
+            </div>
             <p className="text-xs text-muted-foreground mt-1 tracking-wider uppercase font-mono">
               {smartWalletPubkey?.toString().slice(0, 12)}...
             </p>

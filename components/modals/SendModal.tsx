@@ -85,8 +85,22 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       setAmount("");
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Transaction failed:", error);
-      toast.error(error.message || "Transaction failed");
+      console.error("Transaction failed detailed error:", error);
+      
+      // Extract the most relevant error message
+      let errorMessage = "Transaction failed";
+      
+      if (error.message) {
+        if (error.message.includes("User rejected")) {
+          errorMessage = "Transaction rejected by user";
+        } else if (error.message.includes("simulation failed")) {
+          errorMessage = "Transaction simulation failed. Check if you have enough funds.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSending(false);
     }
