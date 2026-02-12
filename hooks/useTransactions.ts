@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useWallet } from "@lazorkit/wallet";
-import { createSolanaRpc, address } from "@solana/kit";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 
 export interface Transaction {
   signature: string;
@@ -26,21 +25,24 @@ export const useTransactions = () => {
       // Check cache first
       const cached = localStorage.getItem("solpay_transactions");
       if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 2 * 60 * 1000) { // 2 minutes cache
-          setTransactions(data);
-          return;
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 2 * 60 * 1000) { // 2 minutes cache
+            setTransactions(data);
+            return;
+          }
+        } catch (e) {
+          // invalid cache
         }
       }
 
       setIsLoading(true);
       try {
-        // Use v1 Connection for getParsedTransactions batch support which is reliable
-        const connection = new (require("@solana/web3.js").Connection)(
+        // Use v1 Connection
+        const connection = new Connection(
           process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com"
         );
-        const pubkeyStr = smartWalletPubkey.toString();
-
+        
         // 1. Fetch recent signatures
         const signatures = await connection.getSignaturesForAddress(
           smartWalletPubkey,
@@ -76,7 +78,8 @@ export const useTransactions = () => {
         if (error.message?.includes("429")) {
           return;
         }
-        setTransactions([]);
+        // Don't clear transactions on error if we have some?
+        // setTransactions([]); 
       } finally {
         setIsLoading(false);
       }
@@ -85,11 +88,7 @@ export const useTransactions = () => {
     // Only fetch once on mount
     fetchHistory();
     
-    // Disable auto-refresh for now to prevent 429 loops
-    // const interval = setInterval(fetchHistory, 60000);
-    // return () => clearInterval(interval);
-
-  }, [smartWalletPubkey?.toString()]); // Use string to prevent object reference loop
+  }, [smartWalletPubkey?.toString()]);
 
   return { transactions, isLoading };
 };

@@ -9,14 +9,25 @@ import { AddContactModal } from "@/components/modals/AddContactModal";
 
 interface ContactGridProps {
   contacts: Contact[];
+  loading?: boolean;
   onAdd: (name: string, address: string, emoji: string) => { success: boolean; error?: string };
   onDelete: (id: string) => void;
   onSelect?: (contact: Contact) => void;
 }
 
-export function ContactGrid({ contacts, onAdd, onDelete, onSelect }: ContactGridProps) {
+export function ContactGrid({ contacts, loading, onAdd, onDelete, onSelect }: ContactGridProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="aspect-square rounded-2xl bg-white/5 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <>

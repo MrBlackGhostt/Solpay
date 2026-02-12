@@ -1,5 +1,5 @@
 import { PasskeyLogin } from "@/components/auth/PasskeyLogin";
-import { Shield, Zap, Smartphone, Globe } from "lucide-react";
+import { Shield, Zap, Smartphone, Globe, Fingerprint } from "lucide-react";
 
 export default function Home() {
   return (
@@ -117,4 +117,4 @@ function StatItem({ value, label }: { value: string; label: string }) {
   );
 }
 
-import { Fingerprint } from "lucide-react";
+
