@@ -97,5 +97,46 @@ export function useTokenBalances() {
 
   }, [smartWalletPubkey?.toString(), connection]);
 
-  return { tokens, isLoading };
+  const refresh = async () => {
+    if (!smartWalletPubkey) return;
+    setIsLoading(true);
+    try {
+      const response = await connection.getParsedTokenAccountsByOwner(
+        smartWalletPubkey,
+        { programId: TOKEN_PROGRAM_ID }
+      );
+
+      const tokenBalances: TokenBalance[] = response.value.map((account) => {
+        const info = account.account.data.parsed.info;
+        const mint = info.mint;
+        const balance = info.tokenAmount.uiAmount;
+        const decimals = info.tokenAmount.decimals;
+
+        const metadata = COMMON_TOKENS_DEVNET[mint] || {
+          symbol: mint.slice(0, 4) + "...",
+          decimals: decimals,
+        };
+
+        return {
+          mint,
+          symbol: metadata.symbol,
+          balance,
+          decimals,
+        };
+      }).filter((token) => token.balance > 0);
+
+      setTokens(tokenBalances);
+      const cacheKey = `token_balances_${smartWalletPubkey.toString()}`;
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data: tokenBalances,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error("Error refreshing token balances:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { tokens, isLoading, refresh };
 }

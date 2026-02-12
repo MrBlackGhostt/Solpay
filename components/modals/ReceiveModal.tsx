@@ -34,7 +34,7 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-surface/95 backdrop-blur-xl border-white/10">
+      <DialogContent className="sm:max-w-[500px] w-full max-w-full h-full sm:h-auto bg-surface/95 backdrop-blur-xl border-white/10 pb-safe">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <ArrowDownLeft className="w-6 h-6 text-secondary" />

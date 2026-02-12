@@ -4,20 +4,38 @@ import { useWallet } from "@lazorkit/wallet";
 import { useBalance } from "@/hooks/useBalance";
 import { useTokenBalances } from "@/hooks/useTokenBalances";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Loader2, Coins } from "lucide-react";
+import { Wallet, Loader2, Coins, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function WalletBalance() {
   const { smartWalletPubkey } = useWallet();
-  const { sol, isLoading: isSolLoading } = useBalance();
-  const { tokens, isLoading: isTokensLoading } = useTokenBalances();
+  const { sol, isLoading: isSolLoading, refresh: refreshSol } = useBalance();
+  const { tokens, isLoading: isTokensLoading, refresh: refreshTokens } = useTokenBalances();
 
   const isLoading = isSolLoading || isTokensLoading;
 
+  const handleRefresh = () => {
+    refreshSol();
+    refreshTokens();
+  };
+
   return (
-    <Card className="bg-surface/50 border-white/5 backdrop-blur-sm overflow-hidden">
+    <Card className="bg-surface/50 border-white/5 backdrop-blur-sm overflow-hidden relative group">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium">Assets</CardTitle>
-        <Wallet className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCcw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+          <Wallet className="w-4 h-4 text-primary" />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -25,7 +43,7 @@ export function WalletBalance() {
           <div>
             <div className="text-2xl font-bold flex items-center gap-2">
               {isSolLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                <Skeleton className="h-8 w-32" />
               ) : (
                 `${sol.toFixed(4)} SOL`
               )}
@@ -36,22 +54,29 @@ export function WalletBalance() {
           </div>
 
           {/* Token List */}
-          {tokens.length > 0 && (
+          {(tokens.length > 0 || isTokensLoading) && (
             <div className="pt-3 border-t border-white/5 space-y-2">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">SPL Tokens</p>
-              {tokens.map((token) => (
-                <div key={token.mint} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center">
-                      <Coins className="w-3 h-3 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium">{token.symbol}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs font-mono">{token.balance.toFixed(2)}</p>
+              {isTokensLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
                 </div>
-              ))}
+              ) : (
+                tokens.map((token) => (
+                  <div key={token.mint} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center">
+                        <Coins className="w-3 h-3 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">{token.symbol}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs font-mono">{token.balance.toFixed(2)}</p>
+                  </div>
+                ))
+              )}
             </div>
           )}
 

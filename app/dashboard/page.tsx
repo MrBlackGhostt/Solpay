@@ -28,7 +28,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Welcome Section */}
       <div className="flex flex-col gap-1">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
@@ -59,6 +59,7 @@ export default function DashboardPage() {
             <ContactGrid
               contacts={contacts}
               loading={isContactsLoading}
+              limit={6}
               onAdd={addContact}
               onDelete={handleDeleteContact}
             />

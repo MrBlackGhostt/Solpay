@@ -52,9 +52,28 @@ export const useBalance = () => {
     return () => clearInterval(interval);
   }, [smartWalletPubkey?.toString(), connection]); // Use string to prevent object reference loop
 
+  const refresh = async () => {
+    if (!smartWalletPubkey) return;
+    setIsLoading(true);
+    try {
+      const bal = await connection.getBalance(smartWalletPubkey);
+      setBalance(bal);
+      const cacheKey = `balance_${smartWalletPubkey.toString()}`;
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        lamports: bal,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error("Error refreshing balance:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     sol: balance / LAMPORTS_PER_SOL,
     lamports: balance,
     isLoading,
+    refresh,
   };
 };

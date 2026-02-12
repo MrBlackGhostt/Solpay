@@ -3,21 +3,25 @@
 import { Contact } from "@/types/contact";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { AddContactModal } from "@/components/modals/AddContactModal";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ContactGridProps {
   contacts: Contact[];
   loading?: boolean;
+  limit?: number;
   onAdd: (name: string, address: string, emoji: string) => { success: boolean; error?: string };
   onDelete: (id: string) => void;
   onSelect?: (contact: Contact) => void;
 }
 
-export function ContactGrid({ contacts, loading, onAdd, onDelete, onSelect }: ContactGridProps) {
+export function ContactGrid({ contacts, loading, limit, onAdd, onDelete, onSelect }: ContactGridProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const displayedContacts = limit ? contacts.slice(0, limit) : contacts;
 
   if (loading) {
     return (
@@ -26,6 +30,29 @@ export function ContactGrid({ contacts, loading, onAdd, onDelete, onSelect }: Co
           <div key={i} className="aspect-square rounded-2xl bg-white/5 animate-pulse" />
         ))}
       </div>
+    );
+  }
+
+  if (contacts.length === 0) {
+    return (
+      <>
+        <EmptyState
+          icon={Users}
+          title="No contacts yet"
+          description="Add your first contact to start sending SOL"
+          action={
+            <Button onClick={() => setShowAddModal(true)} variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Contact
+            </Button>
+          }
+        />
+        <AddContactModal
+          open={showAddModal}
+          onOpenChange={setShowAddModal}
+          onAdd={onAdd}
+        />
+      </>
     );
   }
 
@@ -41,12 +68,12 @@ export function ContactGrid({ contacts, loading, onAdd, onDelete, onSelect }: Co
             <Plus className="w-6 h-6 text-primary" />
           </div>
           <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
-            Add Contact
+            {contacts.length === 0 ? "Add your first contact" : "Add Contact"}
           </span>
         </button>
 
         {/* Contact Cards */}
-        {contacts.map((contact) => (
+        {displayedContacts.map((contact) => (
           <div
             key={contact.id}
             className="relative group"

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 import { WalletProvider } from "@/providers/LazorkitProvider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -14,11 +15,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased selection:bg-primary/30">
         <WalletProvider>
-          {children}
-          <Toaster position="top-center" richColors />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster position="top-center" richColors />
+          </ThemeProvider>
         </WalletProvider>
       </body>
     </html>

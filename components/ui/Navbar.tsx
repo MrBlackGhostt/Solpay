@@ -2,8 +2,10 @@
 
 import { useWallet } from "@lazorkit/wallet";
 import { useRouter } from "next/navigation";
-import { Zap, LogOut, User } from "lucide-react";
+import { Zap, LogOut, User, Settings, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useTheme } from "next-themes";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -16,9 +18,11 @@ import {
 export function Navbar() {
   const { disconnect, smartWalletPubkey } = useWallet();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await disconnect();
+    toast.info("Logged out successfully");
     router.push("/");
   };
 
@@ -36,7 +40,17 @@ export function Navbar() {
           <span className="text-xl font-bold tracking-tight">SolPay</span>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+            <Settings className="w-5 h-5" />
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="rounded-full gap-2 border-white/10 hover:bg-white/5">
