@@ -109,7 +109,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">
-                          {tx.status === 'failed' ? 'Failed Transaction' : 'Sent SOL'}
+                          {tx.status === 'failed' ? 'Failed' : 'Transaction'}
                         </p>
                         <p className="text-xs text-muted-foreground font-mono">
                           {tx.date}
@@ -117,8 +117,8 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-sm">
-                        {tx.amount === "0.00" ? "-" : `-${tx.amount} SOL`}
+                      <p className="font-medium text-sm text-muted-foreground">
+                        Conf.
                       </p>
                       <a 
                         href={`https://solscan.io/tx/${tx.signature}?cluster=devnet`}

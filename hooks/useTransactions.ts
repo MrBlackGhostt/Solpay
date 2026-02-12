@@ -23,42 +23,56 @@ export const useTransactions = () => {
     }
 
     const fetchHistory = async () => {
+      // Check cache first
+      const cached = localStorage.getItem("solpay_transactions");
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 2 * 60 * 1000) { // 2 minutes cache
+          setTransactions(data);
+          return;
+        }
+      }
+
       setIsLoading(true);
       try {
-        const rpc = createSolanaRpc(process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com");
+        // Use v1 Connection for getParsedTransactions batch support which is reliable
+        const connection = new (require("@solana/web3.js").Connection)(
+          process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com"
+        );
         const pubkeyStr = smartWalletPubkey.toString();
 
         // 1. Fetch recent signatures
-        const signatures = await rpc
-          .getSignaturesForAddress(address(pubkeyStr), { limit: 10 })
-          .send();
+        const signatures = await connection.getSignaturesForAddress(
+          smartWalletPubkey,
+          { limit: 5 }
+        );
 
         if (!signatures || signatures.length === 0) {
           setTransactions([]);
+          setIsLoading(false);
           return;
         }
 
-        // 2. Map direct signatures to format (basic version for speed)
-        // Note: For full details like amount, we would need getTransaction or getParsedTransaction
-        // But the new API might be different. Let's stick to signatures first and key details.
-        
-        // For now, we will just show the signatures as a placeholder for real parsed data
-        // because parsing instruction data for amounts is complex without a robust indexer.
-        // We will try to infer some details or mock the amount for the demo if parsing is too heavy.
-        
+        // Revert to basic signatures only to avoid 429s on getParsedTransactions
         const formattedTxs: Transaction[] = signatures.map((sig: any) => ({
           signature: sig.signature,
-          date: new Date(Number(sig.blockTime || Date.now() / 1000) * 1000).toLocaleDateString(),
-          amount: "0.00", // Placeholder until we parse proper
-          type: "sent",   // Placeholder
+          date: new Date(sig.blockTime! * 1000).toLocaleDateString(),
+          amount: "---", 
+          type: "sent", // Default generic type
           status: sig.err ? "failed" : "success",
         }));
 
         setTransactions(formattedTxs);
+        
+        // Save to cache
+        localStorage.setItem("solpay_transactions", JSON.stringify({
+          data: formattedTxs,
+          timestamp: Date.now()
+        }));
 
       } catch (error: any) {
         console.error("Error fetching transactions:", error);
-        // If rate limited, just keep existing transactions
+        // If rate limited, just keep existing transactions or use cache
         if (error.message?.includes("429")) {
           return;
         }
@@ -75,7 +89,7 @@ export const useTransactions = () => {
     // const interval = setInterval(fetchHistory, 60000);
     // return () => clearInterval(interval);
 
-  }, [smartWalletPubkey]);
+  }, [smartWalletPubkey?.toString()]); // Use string to prevent object reference loop
 
   return { transactions, isLoading };
 };

@@ -19,10 +19,25 @@ export const useBalance = () => {
     }
 
     const fetchBalance = async () => {
+      // Simple cache to prevent rapid re-fetching
+      const cacheKey = `balance_${smartWalletPubkey.toString()}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const { lamports, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 30000) { // 30s cache
+          setBalance(lamports);
+          return;
+        }
+      }
+
       setIsLoading(true);
       try {
         const bal = await connection.getBalance(smartWalletPubkey);
         setBalance(bal);
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          lamports: bal,
+          timestamp: Date.now()
+        }));
       } catch (error) {
         console.error("Error fetching balance:", error);
       } finally {
@@ -35,7 +50,7 @@ export const useBalance = () => {
     // Polling every 60s instead of WebSocket to avoid WSS errors
     const interval = setInterval(fetchBalance, 60000);
     return () => clearInterval(interval);
-  }, [smartWalletPubkey, connection]);
+  }, [smartWalletPubkey?.toString(), connection]); // Use string to prevent object reference loop
 
   return {
     sol: balance / LAMPORTS_PER_SOL,
