@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useWallet } from "@lazorkit/wallet";
 import { useContacts } from "@/hooks/useContacts";
 import { useTokenBalances, TokenBalance } from "@/hooks/useTokenBalances";
-import { SystemProgram, LAMPORTS_PER_SOL, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { SystemProgram, LAMPORTS_PER_SOL, PublicKey, TransactionInstruction, Connection } from "@solana/web3.js";
 import { 
   getAssociatedTokenAddressSync, 
   createTransferCheckedInstruction, 
@@ -72,7 +72,6 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
     setIsSending(true);
 
     try {
-      const { Connection } = await import("@solana/web3.js");
       const connection = new Connection(
         process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com"
       );
