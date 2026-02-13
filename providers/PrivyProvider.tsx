@@ -9,6 +9,13 @@ import { ReactNode } from "react";
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
 
 export function Providers({ children }: { children: ReactNode }) {
+  // If we don't have a valid App ID (empty or placeholder), we render without Privy
+  // to prevent build-time crashes. In production, this ID must be present.
+  if (!PRIVY_APP_ID || PRIVY_APP_ID === "INSERT_PRIVY_APP_ID" || PRIVY_APP_ID === "PLACEHOLDER") {
+    console.warn("[Privy] Missing or invalid NEXT_PUBLIC_PRIVY_APP_ID. Skipping PrivyProvider.");
+    return <>{children}</>;
+  }
+
   return (
     <PrivyProvider
       appId={PRIVY_APP_ID}
