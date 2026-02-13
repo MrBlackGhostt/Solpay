@@ -40,8 +40,8 @@ self.addEventListener('fetch', (event) => {
               return response;
             }
 
-            // Skip chrome-extension schemes
-            if (event.request.url.startsWith('chrome-extension://')) {
+            // Skip chrome-extension schemes and other non-http/https
+            if (!event.request.url.startsWith('http')) {
               return response;
             }
 

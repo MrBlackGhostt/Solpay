@@ -6,15 +6,6 @@ import React from "react";
 const CONFIG = {
   RPC_URL: process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com",
   PORTAL_URL: "https://portal.lazor.sh",
-  PAYMASTER: {
-    paymasterUrl: "https://kora.devnet.lazorkit.com",
-  },
-};
-
-const PAYMASTER_CONFIG = {
-  // Disable paymaster by passing empty string to force user-pays
-  // Using a stable object reference to prevent infinite render loops
-  paymasterUrl: "",
 };
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
@@ -22,7 +13,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     <LazorkitProvider
       rpcUrl={CONFIG.RPC_URL}
       portalUrl={CONFIG.PORTAL_URL}
-      paymasterConfig={PAYMASTER_CONFIG}
     >
       {children}
     </LazorkitProvider>
