@@ -40,6 +40,11 @@ self.addEventListener('fetch', (event) => {
               return response;
             }
 
+            // Skip chrome-extension schemes
+            if (event.request.url.startsWith('chrome-extension://')) {
+              return response;
+            }
+
             // Clone the response
             const responseToCache = response.clone();
 

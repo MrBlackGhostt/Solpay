@@ -16,10 +16,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     <LazorkitProvider
       rpcUrl={CONFIG.RPC_URL}
       portalUrl={CONFIG.PORTAL_URL}
-      // Paymaster disabled to allow user-funded transactions
-      // paymasterConfig={{
-      //   paymasterUrl: CONFIG.PAYMASTER.paymasterUrl,
-      // }}
+      // Disable paymaster by passing empty string to force user-pays
+      paymasterConfig={{
+        paymasterUrl: "",
+      }}
     >
       {children}
     </LazorkitProvider>
