@@ -13,9 +13,8 @@ import { useBalance } from "@/hooks/useBalance";
 import { PublicKey } from "@solana/web3.js";
 import { 
   getAssociatedTokenAddressSync, 
-  createTransferCheckedInstruction, 
+  createTransferInstruction,
   createAssociatedTokenAccountInstruction,
-  getAccount,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
@@ -170,13 +169,14 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
         }
 
         const tokenAmount = BigInt(Math.floor(amountNum * Math.pow(10, selectedToken.decimals)));
-        const transferIx = createTransferCheckedInstruction(
+        console.log("🪙 Creating SPL transfer instruction for amount:", tokenAmount.toString());
+        
+        // Use createTransferInstruction as requested (simpler, no mint/decimals check on-chain)
+        const transferIx = createTransferInstruction(
           fromAta,
-          mintPubkey,
           toAta,
           payerPubkey,
-          tokenAmount,
-          selectedToken.decimals
+          tokenAmount
         );
         instructions.push(toV2Instruction(transferIx));
       }
