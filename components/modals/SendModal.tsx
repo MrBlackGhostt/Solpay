@@ -60,25 +60,42 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
   const recipientAddress = selectedContact?.address || manualAddress;
 
   const handleSend = async () => {
+    console.log("🚀 Starting handleSend...");
+    
     if (!isConnected || !smartWalletPubkey) {
+      console.warn("⚠️ Wallet not connected");
       toast.error("Please connect your wallet first");
       return;
     }
 
+    console.log("✅ Wallet connected:", smartWalletPubkey.toBase58());
+    console.log("📝 Inputs:", { recipientAddress, amount, selectedToken });
+
     if (!recipientAddress) {
+      console.warn("⚠️ No recipient address");
       toast.error("Please select a contact or enter an address");
       return;
     }
 
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
+      console.warn("⚠️ Invalid amount");
       toast.error("Please enter a valid amount");
+      return;
+    }
+
+    // Balance Check
+    const currentBalance = selectedToken.balance || 0;
+    if (amountNum > currentBalance) {
+      console.error("❌ Insufficient balance:", { amount: amountNum, balance: currentBalance });
+      toast.error("Insufficient balance");
       return;
     }
 
     setIsSending(true);
 
     try {
+      console.log("🔌 Connecting to RPC...");
       const connection = new Connection(
         process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com"
       );
@@ -86,25 +103,34 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       const recipientPubkey = new PublicKey(recipientAddress);
       const instructions: TransactionInstruction[] = [];
 
+      console.log("🛠️ Building instructions for token:", selectedToken.mint);
+
       if (selectedToken.mint === "native") {
         // SOL Transfer
+        const lamports = Math.floor(amountNum * LAMPORTS_PER_SOL);
+        console.log("💸 Creating SOL transfer instruction:", { lamports });
+        
         instructions.push(
           SystemProgram.transfer({
             fromPubkey: smartWalletPubkey,
             toPubkey: recipientPubkey,
-            lamports: Math.floor(amountNum * LAMPORTS_PER_SOL),
+            lamports,
           })
         );
       } else {
         // SPL Token Transfer
+        console.log("🪙 Creating SPL token transfer instruction...");
         const mintPubkey = new PublicKey(selectedToken.mint);
         const fromAta = getAssociatedTokenAddressSync(mintPubkey, smartWalletPubkey);
         const toAta = getAssociatedTokenAddressSync(mintPubkey, recipientPubkey);
 
         // Check if destination ATA exists
         try {
+          console.log("🔍 Checking destination ATA:", toAta.toBase58());
           await getAccount(connection, toAta);
+          console.log("✅ Destination ATA exists");
         } catch (e: any) {
+          console.log("⚠️ Destination ATA not found, creating...", e.name);
           // If account doesn't exist, create it
           if (e.name === "TokenAccountNotFoundError" || e.name === "TokenInvalidAccountOwnerError") {
             instructions.push(
@@ -120,22 +146,29 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
           }
         }
 
+        const tokenAmount = Math.floor(amountNum * Math.pow(10, selectedToken.decimals));
+        console.log("📦 Adding transfer instruction:", { tokenAmount, decimals: selectedToken.decimals });
+
         instructions.push(
           createTransferCheckedInstruction(
             fromAta,
             mintPubkey,
             toAta,
             smartWalletPubkey,
-            Math.floor(amountNum * Math.pow(10, selectedToken.decimals)),
+            tokenAmount,
             selectedToken.decimals
           )
         );
       }
 
+      console.log("✍️ Signing and sending transaction...", { instructionsCount: instructions.length });
+      
       // Sign and send transaction
       const signature = await signAndSendTransaction({
         instructions,
       });
+
+      console.log("✅ Transaction successful! Signature:", signature);
 
       // Update last used for contact
       if (selectedContact) {
@@ -156,7 +189,7 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       setSelectedToken(SOL_TOKEN);
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Transaction failed detailed error:", error);
+      console.error("❌ Transaction failed detailed error:", error);
       
       // Extract the most relevant error message
       let errorMessage = "Transaction failed";
@@ -166,6 +199,8 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
           errorMessage = "Transaction rejected by user";
         } else if (error.message.includes("simulation failed")) {
           errorMessage = "Transaction simulation failed. Check if you have enough funds.";
+        } else if (error.message.includes("Attempt to debit an account but found no record of a prior credit")) {
+           errorMessage = "Insufficient funds in your wallet (0 SOL).";
         } else {
           errorMessage = error.message;
         }
@@ -173,6 +208,7 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       
       toast.error(errorMessage);
     } finally {
+      console.log("🏁 handleSend finished");
       setIsSending(false);
     }
   };
