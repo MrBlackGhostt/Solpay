@@ -1,6 +1,6 @@
 "use client";
 
-import { useWallet } from "@lazorkit/wallet";
+import { usePrivy } from "@privy-io/react-auth";
 import { useBalance } from "@/hooks/useBalance";
 import { useTokenBalances } from "@/hooks/useTokenBalances";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function WalletBalance() {
-  const { smartWalletPubkey } = useWallet();
+  const { user } = usePrivy();
+  const walletAddress = user?.wallet?.address;
+  
   const { sol, isLoading: isSolLoading, refresh: refreshSol } = useBalance();
   const { tokens, isLoading: isTokensLoading, refresh: refreshTokens } = useTokenBalances();
 
@@ -93,7 +95,7 @@ export function WalletBalance() {
           )}
 
           <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-white/5 font-mono overflow-hidden text-ellipsis">
-            {smartWalletPubkey?.toString()}
+            {walletAddress}
           </p>
         </div>
       </CardContent>

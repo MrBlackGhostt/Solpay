@@ -1,6 +1,6 @@
 "use client";
 
-import { useWallet } from "@lazorkit/wallet";
+import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Navbar } from "@/components/ui/Navbar";
@@ -11,16 +11,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isConnected, isLoading } = useWallet();
+  const { ready, authenticated } = usePrivy();
   const router = useRouter();
   
   useEffect(() => {
-    if (!isLoading && !isConnected) {
+    if (ready && !authenticated) {
       router.push("/");
     }
-  }, [isConnected, isLoading, router]);
+  }, [ready, authenticated, router]);
 
-  if (isLoading || !isConnected) {
+  if (!ready || (ready && !authenticated)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 animate-bounce">

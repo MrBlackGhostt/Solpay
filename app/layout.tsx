@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { WalletProvider } from "@/providers/LazorkitProvider";
+import { Providers } from "@/providers/PrivyProvider";
 import { Toaster } from "@/components/ui/sonner";
 import PWARegister from "@/components/PWARegister";
 
@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased selection:bg-primary/30">
-        <WalletProvider>
+        <Providers>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -54,7 +54,7 @@ export default function RootLayout({
             <Toaster position="top-center" richColors />
             <PWARegister />
           </ThemeProvider>
-        </WalletProvider>
+        </Providers>
       </body>
     </html>
   );

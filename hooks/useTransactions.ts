@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useWallet } from "@lazorkit/wallet";
-import { Connection } from "@solana/web3.js";
+import { usePrivy } from "@privy-io/react-auth";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 export interface Transaction {
   signature: string;
@@ -11,12 +11,13 @@ export interface Transaction {
 }
 
 export const useTransactions = () => {
-  const { smartWalletPubkey } = useWallet();
+  const { user } = usePrivy();
+  const walletAddress = user?.wallet?.address;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!smartWalletPubkey) {
+    if (!walletAddress) {
       setTransactions([]);
       return;
     }
@@ -45,7 +46,7 @@ export const useTransactions = () => {
         
         // 1. Fetch recent signatures
         const signatures = await connection.getSignaturesForAddress(
-          smartWalletPubkey,
+          new PublicKey(walletAddress),
           { limit: 5 }
         );
 
@@ -88,7 +89,7 @@ export const useTransactions = () => {
     // Only fetch once on mount
     fetchHistory();
     
-  }, [smartWalletPubkey?.toString()]);
+  }, [walletAddress]);
 
   return { transactions, isLoading };
 };

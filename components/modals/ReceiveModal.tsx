@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useWallet } from "@lazorkit/wallet";
+import { usePrivy } from "@privy-io/react-auth";
 import { toast } from "sonner";
 import QRCode from "react-qr-code";
 import { ArrowDownLeft, Copy, Check } from "lucide-react";
@@ -14,10 +14,10 @@ interface ReceiveModalProps {
 }
 
 export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
-  const { smartWalletPubkey } = useWallet();
+  const { user } = usePrivy();
   const [copied, setCopied] = useState(false);
 
-  const address = smartWalletPubkey?.toBase58() || "";
+  const address = user?.wallet?.address || "";
 
   const handleCopy = async () => {
     if (!address) return;

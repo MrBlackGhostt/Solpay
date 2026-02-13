@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransactions } from "@/hooks/useTransactions";
-import { useWallet } from "@lazorkit/wallet";
+import { usePrivy } from "@privy-io/react-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ExternalLink, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 export function RecentActivity() {
   const { transactions, isLoading } = useTransactions();
-  const { smartWalletPubkey } = useWallet();
+  const { user } = usePrivy();
+  const walletAddress = user?.wallet?.address;
 
   return (
     <Card className="lg:col-span-4 bg-surface/50 border-white/5 backdrop-blur-sm">
@@ -18,7 +19,7 @@ export function RecentActivity() {
         <CardTitle className="text-lg">Recent Activity</CardTitle>
         <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-primary gap-1" asChild>
           <a 
-            href={`https://solscan.io/account/${smartWalletPubkey?.toString()}?cluster=devnet#splTransfers`}
+            href={`https://solscan.io/account/${walletAddress}?cluster=devnet#splTransfers`}
             target="_blank"
             rel="noreferrer"
           >

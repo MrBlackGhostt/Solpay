@@ -1,6 +1,6 @@
 "use client";
 
-import { useWallet } from "@lazorkit/wallet";
+import { useLogin, usePrivy } from "@privy-io/react-auth";
 import { Button } from "@/components/ui/button";
 import { Fingerprint, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -8,42 +8,40 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export const PasskeyLogin = () => {
-  const { connect, isConnecting, isConnected, error } = useWallet();
   const router = useRouter();
+  const { authenticated, ready } = usePrivy();
+  
+  const { login } = useLogin({
+    onComplete: (user) => {
+      console.log("User logged in:", user);
+      toast.success("Welcome back!");
+      router.push("/dashboard");
+    },
+    onError: (error) => {
+      console.error("Login error:", error);
+      toast.error("Failed to login");
+    },
+  });
 
   useEffect(() => {
-    if (isConnected) {
+    if (ready && authenticated) {
       router.push("/dashboard");
     }
-  }, [isConnected, router]);
+  }, [ready, authenticated, router]);
 
-  useEffect(() => {
-    if (error) {
-      toast.error(error.message || "Failed to connect wallet");
-    }
-  }, [error]);
-
-  const handleLogin = async () => {
-    try {
-      await connect();
-      toast.success("Welcome to SolPay!");
-    } catch (err: any) {
-      console.error("Login failed:", err);
-      // useWallet error state will handle the toast
-    }
-  };
+  const isLoading = !ready;
 
   return (
     <Button
-      onClick={handleLogin}
-      disabled={isConnecting}
+      onClick={login}
+      disabled={isLoading || authenticated}
       size="lg"
       className="w-full h-14 text-lg font-semibold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary hover:bg-primary-dark"
     >
-      {isConnecting ? (
+      {isLoading ? (
         <>
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Authenticating...
+          Loading...
         </>
       ) : (
         <>

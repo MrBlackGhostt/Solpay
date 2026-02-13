@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useWallet } from "@lazorkit/wallet";
+import { usePrivy } from "@privy-io/react-auth";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
@@ -19,7 +19,8 @@ const COMMON_TOKENS_DEVNET: Record<string, { symbol: string; decimals: number }>
 };
 
 export function useTokenBalances() {
-  const { smartWalletPubkey } = useWallet();
+  const { user } = usePrivy();
+  const walletAddress = user?.wallet?.address;
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,14 +30,14 @@ export function useTokenBalances() {
   );
 
   useEffect(() => {
-    if (!smartWalletPubkey) {
+    if (!walletAddress) {
       setTokens([]);
       return;
     }
 
     const fetchTokens = async () => {
       // Check cache
-      const cacheKey = `token_balances_${smartWalletPubkey.toString()}`;
+      const cacheKey = `token_balances_${walletAddress}`;
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -53,7 +54,7 @@ export function useTokenBalances() {
       setIsLoading(true);
       try {
         const response = await connection.getParsedTokenAccountsByOwner(
-          smartWalletPubkey,
+          new PublicKey(walletAddress),
           { programId: TOKEN_PROGRAM_ID }
         );
 
@@ -95,14 +96,14 @@ export function useTokenBalances() {
     const interval = setInterval(fetchTokens, 60000);
     return () => clearInterval(interval);
 
-  }, [smartWalletPubkey?.toString(), connection]);
+  }, [walletAddress, connection]);
 
   const refresh = async () => {
-    if (!smartWalletPubkey) return;
+    if (!walletAddress) return;
     setIsLoading(true);
     try {
       const response = await connection.getParsedTokenAccountsByOwner(
-        smartWalletPubkey,
+        new PublicKey(walletAddress),
         { programId: TOKEN_PROGRAM_ID }
       );
 
@@ -126,7 +127,7 @@ export function useTokenBalances() {
       }).filter((token) => token.balance > 0);
 
       setTokens(tokenBalances);
-      const cacheKey = `token_balances_${smartWalletPubkey.toString()}`;
+      const cacheKey = `token_balances_${walletAddress}`;
       sessionStorage.setItem(cacheKey, JSON.stringify({
         data: tokenBalances,
         timestamp: Date.now()

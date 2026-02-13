@@ -1,6 +1,6 @@
 "use client";
 
-import { useWallet } from "@lazorkit/wallet";
+import { usePrivy, useLogout } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import { Zap, LogOut, User, Settings, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,18 +16,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
-  const { disconnect, smartWalletPubkey } = useWallet();
+  const { user } = usePrivy();
+  const { logout } = useLogout();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
-    await disconnect();
+    await logout();
     toast.info("Logged out successfully");
     router.push("/");
   };
 
-  const truncatedAddress = smartWalletPubkey 
-    ? `${smartWalletPubkey.toString().slice(0, 4)}...${smartWalletPubkey.toString().slice(-4)}`
+  const walletAddress = user?.wallet?.address;
+  const truncatedAddress = walletAddress
+    ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
     : "Connected";
 
   return (
