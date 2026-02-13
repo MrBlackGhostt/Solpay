@@ -79,14 +79,20 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
   const recipientAddress = selectedContact?.address || manualAddress;
   const walletAddress = user?.wallet?.address;
 
-  const toV2Instruction = (ix: any) => ({
-    programAddress: address(ix.programId.toBase58()),
-    accounts: ix.keys.map((k: any) => ({
-      address: address(k.pubkey.toBase58()),
-      role: k.isSigner ? (k.isWritable ? 3 : 2) : (k.isWritable ? 1 : 0)
-    })),
-    data: new Uint8Array(ix.data)
-  });
+  const toV2Instruction = (ix: any) => {
+    if (!ix || !ix.programId || !ix.keys) {
+      console.error("❌ Invalid v1 instruction:", ix);
+      throw new Error("Invalid instruction format");
+    }
+    return {
+      programAddress: address(ix.programId.toBase58()),
+      accounts: ix.keys.map((k: any) => ({
+        address: address(k.pubkey.toBase58()),
+        role: k.isSigner ? (k.isWritable ? 3 : 2) : (k.isWritable ? 1 : 0)
+      })),
+      data: ix.data ? new Uint8Array(ix.data) : new Uint8Array()
+    };
+  };
 
   const handleSend = async () => {
     console.log("🚀 Starting handleSend...");
@@ -176,8 +182,9 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       }
 
       console.log("📝 Compiling transaction...");
+      const transactionMessage = createTransactionMessage({ version: 'legacy' });
       const transaction = pipe(
-        createTransactionMessage({ version: 0 }),
+        transactionMessage,
         (tx) => setTransactionMessageFeePayer(address(walletAddress), tx),
         (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
         (tx) => appendTransactionMessageInstructions(instructions, tx),
@@ -185,7 +192,7 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
         (tx) => new Uint8Array(getTransactionEncoder().encode(tx))
       );
 
-      console.log("📨 Sending transaction...");
+      console.log("📨 Sending transaction (length):", transaction.length);
       const signature = await signAndSendTransaction({ transaction, wallet });
       
       console.log("✅ Transaction sent:", signature);
