@@ -11,15 +11,18 @@ const CONFIG = {
   },
 };
 
+const PAYMASTER_CONFIG = {
+  // Disable paymaster by passing empty string to force user-pays
+  // Using a stable object reference to prevent infinite render loops
+  paymasterUrl: "",
+};
+
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   return (
     <LazorkitProvider
       rpcUrl={CONFIG.RPC_URL}
       portalUrl={CONFIG.PORTAL_URL}
-      // Disable paymaster by passing empty string to force user-pays
-      paymasterConfig={{
-        paymasterUrl: "",
-      }}
+      paymasterConfig={PAYMASTER_CONFIG}
     >
       {children}
     </LazorkitProvider>
