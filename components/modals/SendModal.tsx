@@ -133,72 +133,86 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       const rpc = createSolanaRpc(process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com");
       const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
-      const instructions: any[] = [];
-
+      // NATIVE SOL TRANSFER (v2 Pipeline)
       if (selectedToken.mint === "native") {
         console.log("💸 Creating SOL transfer...");
         const lamports = BigInt(Math.floor(amountNum * 1_000_000_000));
-        instructions.push(
-          getTransferSolInstruction({
+        const transferIx = getTransferSolInstruction({
             amount: lamports,
             destination: address(recipientAddress),
             source: createNoopSigner(address(walletAddress))
-          })
+        });
+        
+        console.log("📝 Compiling SOL transaction...");
+        const transactionMessage = createTransactionMessage({ version: 'legacy' });
+        const transaction = pipe(
+          transactionMessage,
+          (tx) => setTransactionMessageFeePayer(address(walletAddress), tx),
+          (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+          (tx) => appendTransactionMessageInstructions([transferIx], tx),
+          (tx) => compileTransaction(tx),
+          (tx) => new Uint8Array(getTransactionEncoder().encode(tx))
         );
+
+        console.log("📨 Sending SOL transaction...");
+        const signature = await signAndSendTransaction({ transaction, wallet });
+        console.log("✅ Transaction sent:", signature);
+        toast.success("Transaction sent successfully!");
+
       } else {
+        // SPL TOKEN TRANSFER (v1/Privy native support)
+        // We use v1 Transaction object because Privy handles it robustly for SPL tokens without encoding issues
         console.log("🪙 Creating SPL token transfer...");
-        const mintPubkey = new PublicKey(selectedToken.mint);
-        const payerPubkey = new PublicKey(walletAddress);
-        const recipientPubkey = new PublicKey(recipientAddress);
+        
+        // Import v1 classes dynamically or assume global for simplicity in this replacement block?
+        // Better to use the imported @solana/web3.js classes if we have them.
+        // We need to add Transaction to imports.
+        const { Transaction, PublicKey: PublicKeyV1 } = require("@solana/web3.js");
+        
+        const mintPubkey = new PublicKeyV1(selectedToken.mint);
+        const payerPubkey = new PublicKeyV1(walletAddress);
+        const recipientPubkey = new PublicKeyV1(recipientAddress);
 
         const fromAta = getAssociatedTokenAddressSync(mintPubkey, payerPubkey);
         const toAta = getAssociatedTokenAddressSync(mintPubkey, recipientPubkey);
 
-        // Check if recipient ATA exists using v2 RPC
+        const tx = new Transaction();
+        tx.recentBlockhash = latestBlockhash.blockhash;
+        tx.feePayer = payerPubkey;
+
+        // Check/Create ATA
         const accountInfo = await rpc.getAccountInfo(address(toAta.toBase58())).send();
-        
         if (!accountInfo.value) {
-          console.log("📦 Creating recipient ATA...");
-          const createAtaIx = createAssociatedTokenAccountInstruction(
-            payerPubkey, 
-            toAta, 
-            recipientPubkey, 
-            mintPubkey
-          );
-          instructions.push(toV2Instruction(createAtaIx));
+            console.log("📦 Adding create ATA instruction...");
+            tx.add(
+                createAssociatedTokenAccountInstruction(
+                    payerPubkey,
+                    toAta,
+                    recipientPubkey,
+                    mintPubkey
+                )
+            );
         }
 
         const tokenAmount = BigInt(Math.floor(amountNum * Math.pow(10, selectedToken.decimals)));
-        console.log("🪙 Creating SPL transfer instruction for amount:", tokenAmount.toString());
-        
-        // Use createTransferInstruction as requested (simpler, no mint/decimals check on-chain)
-        const transferIx = createTransferInstruction(
-          fromAta,
-          toAta,
-          payerPubkey,
-          tokenAmount
+        console.log("🪙 Adding SPL transfer instruction...");
+        tx.add(
+            createTransferInstruction(
+                fromAta,
+                toAta,
+                payerPubkey,
+                tokenAmount
+            )
         );
-        instructions.push(toV2Instruction(transferIx));
+
+        console.log("� Sending SPL transaction via Privy...");
+        // Privy accepts v1 Transaction object directly
+        const signature = await signAndSendTransaction({ transaction: tx, wallet });
+        console.log("✅ Transaction sent:", signature);
+        toast.success("Transaction sent successfully!");
       }
-
-      console.log("📝 Compiling transaction...");
-      const transactionMessage = createTransactionMessage({ version: 'legacy' });
-      const transaction = pipe(
-        transactionMessage,
-        (tx) => setTransactionMessageFeePayer(address(walletAddress), tx),
-        (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-        (tx) => appendTransactionMessageInstructions(instructions, tx),
-        (tx) => compileTransaction(tx),
-        (tx) => new Uint8Array(getTransactionEncoder().encode(tx))
-      );
-
-      console.log("📨 Sending transaction (length):", transaction.length);
-      const signature = await signAndSendTransaction({ transaction, wallet });
       
-      console.log("✅ Transaction sent:", signature);
-      toast.success("Transaction sent successfully!");
-      
-      // Update contact last used if applicable
+      // Update contact last used
       if (selectedContact) {
         updateLastUsed(selectedContact.id);
       }
@@ -206,6 +220,7 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       onOpenChange(false);
       setAmount("");
       setManualAddress("");
+
     } catch (error: any) {
       console.error("❌ Transaction failed:", error);
       toast.error(`Transaction failed: ${error.message || "Unknown error"}`);
