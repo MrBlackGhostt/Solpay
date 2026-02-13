@@ -8,7 +8,7 @@ export function useContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load contacts on mount
+  // Load contacts and sync across components
   useEffect(() => {
     const loadContacts = () => {
       try {
@@ -21,7 +21,28 @@ export function useContacts() {
       }
     };
 
+    // Initial load
     loadContacts();
+
+    // Listen for storage changes in OTHER tabs/windows
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "solpay-contacts") {
+        loadContacts();
+      }
+    };
+
+    // Listen for custom trigger in the SAME tab/window
+    const handleLocalUpdate = () => {
+      loadContacts();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("solpay-contacts-updated", handleLocalUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("solpay-contacts-updated", handleLocalUpdate);
+    };
   }, []);
 
   const addContact = (name: string, address: string, emoji: string = "👤") => {

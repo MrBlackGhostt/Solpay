@@ -50,6 +50,7 @@ export const contactService = {
 
     const updated = [...contacts, newContact];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("solpay-contacts-updated"));
     
     return newContact;
   },
@@ -61,6 +62,7 @@ export const contactService = {
     const contacts = this.getAll();
     const filtered = contacts.filter(c => c.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    window.dispatchEvent(new Event("solpay-contacts-updated"));
   },
 
   /**
@@ -79,5 +81,6 @@ export const contactService = {
       c.id === id ? { ...c, lastUsed: new Date().toISOString() } : c
     );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("solpay-contacts-updated"));
   },
 };
