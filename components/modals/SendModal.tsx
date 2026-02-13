@@ -288,9 +288,10 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
                     onClick={() => {
                       if (selectedContact?.id === contact.id) {
                         setSelectedContact(null);
+                        setManualAddress("");
                       } else {
                         setSelectedContact(contact);
-                        setManualAddress("");
+                        setManualAddress(contact.address);
                       }
                     }}
                     className={`
