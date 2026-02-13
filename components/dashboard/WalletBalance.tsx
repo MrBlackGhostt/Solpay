@@ -4,7 +4,7 @@ import { useWallet } from "@lazorkit/wallet";
 import { useBalance } from "@/hooks/useBalance";
 import { useTokenBalances } from "@/hooks/useTokenBalances";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Loader2, Coins, RefreshCcw } from "lucide-react";
+import { Wallet, Loader2, Coins, RefreshCcw, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -48,9 +48,21 @@ export function WalletBalance() {
                 `${sol.toFixed(4)} SOL`
               )}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wider uppercase font-mono">
-              Native Solana
-            </p>
+            <div className="flex items-center justify-between mt-0.5">
+              <p className="text-[10px] text-muted-foreground tracking-wider uppercase font-mono">
+                Native Solana
+              </p>
+              {sol < 0.01 && (
+                <a 
+                  href="https://faucet.solana.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-accent hover:underline flex items-center gap-1"
+                >
+                  Get Devnet SOL <ArrowUpRight className="w-3 h-3" />
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Token List */}

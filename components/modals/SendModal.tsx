@@ -325,8 +325,18 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
             </div>
           )}
 
-          {/* Actions */}
+            {/* Actions */}
           <div className="flex gap-3 pt-2">
+            {selectedToken.mint === "native" && (selectedToken.balance || 0) < 0.01 && (
+              <a
+                href="https://faucet.solana.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-4 right-4 text-xs text-accent hover:underline flex items-center gap-1"
+              >
+                Get Devnet SOL <ArrowUpRight className="w-3 h-3" />
+              </a>
+            )}
             <Button
               type="button"
               variant="outline"
