@@ -286,8 +286,12 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
                   <button
                     key={contact.id}
                     onClick={() => {
-                      setSelectedContact(contact);
-                      setManualAddress("");
+                      if (selectedContact?.id === contact.id) {
+                        setSelectedContact(null);
+                      } else {
+                        setSelectedContact(contact);
+                        setManualAddress("");
+                      }
                     }}
                     className={`
                       p-3 rounded-xl text-left transition-all
@@ -325,7 +329,7 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
                 setManualAddress(e.target.value);
                 setSelectedContact(null);
               }}
-              disabled={!!selectedContact}
+              disabled={false}
               className="h-12 bg-white/5 border-white/10 focus:border-primary font-mono text-sm"
             />
           </div>
