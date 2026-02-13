@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useWallet } from "@lazorkit/wallet";
 import { useContacts } from "@/hooks/useContacts";
 import { useTokenBalances, TokenBalance } from "@/hooks/useTokenBalances";
+import { useBalance } from "@/hooks/useBalance";
 import { SystemProgram, LAMPORTS_PER_SOL, PublicKey, TransactionInstruction, Connection } from "@solana/web3.js";
 import { 
   getAssociatedTokenAddressSync, 
@@ -43,12 +44,18 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
   const { smartWalletPubkey, signAndSendTransaction, isConnected } = useWallet();
   const { contacts, updateLastUsed } = useContacts();
   const { tokens } = useTokenBalances();
+  const { sol: solBalance } = useBalance();
   
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [manualAddress, setManualAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedToken, setSelectedToken] = useState<TokenBalance>(SOL_TOKEN);
   const [isSending, setIsSending] = useState(false);
+
+  // Update SOL_TOKEN balance when hook updates
+  if (selectedToken.mint === "native") {
+    selectedToken.balance = solBalance || 0;
+  }
 
   const recipientAddress = selectedContact?.address || manualAddress;
 
@@ -198,7 +205,7 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">
-                      Balance: {selectedToken.mint === "native" ? "---" : selectedToken.balance}
+                      Balance: {selectedToken.mint === "native" ? (solBalance || "0.00") : selectedToken.balance}
                     </span>
                     <Zap className="w-4 h-4 text-muted-foreground" />
                   </div>
@@ -209,7 +216,7 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
                 <DropdownMenuSeparator className="bg-white/5" />
                 <DropdownMenuItem 
                   className="gap-2 focus:bg-primary/20"
-                  onClick={() => setSelectedToken(SOL_TOKEN)}
+                  onClick={() => setSelectedToken({...SOL_TOKEN, balance: solBalance || 0})}
                 >
                   <Zap className="w-4 h-4 text-primary" />
                   <span>Solana (SOL)</span>
@@ -332,7 +339,13 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
             <Button
               onClick={handleSend}
               className="flex-1 h-12 bg-primary hover:bg-primary-dark"
-              disabled={isSending || !recipientAddress || !amount || parseFloat(amount) <= 0}
+              disabled={
+                isSending || 
+                !recipientAddress || 
+                !amount || 
+                parseFloat(amount) <= 0 ||
+                parseFloat(amount) > (selectedToken.balance || 0)
+              }
             >
               {isSending ? (
                 <>
@@ -342,7 +355,10 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
               ) : (
                 <>
                   <ArrowUpRight className="mr-2 h-4 w-4" />
-                  Send {selectedToken.symbol}
+                  {parseFloat(amount) > (selectedToken.balance || 0) 
+                    ? "Insufficient Balance" 
+                    : `Send ${selectedToken.symbol}`
+                  }
                 </>
               )}
             </Button>
