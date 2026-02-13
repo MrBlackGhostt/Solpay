@@ -1,9 +1,11 @@
 import { PasskeyLogin } from "@/components/auth/PasskeyLogin";
+import AddToHomeScreen from "@/components/AddToHomeScreen";
 import { Shield, Zap, Smartphone, Globe, Fingerprint } from "lucide-react";
 
 export default function Home() {
   return (
     <main className="min-h-screen relative overflow-hidden bg-background selection:bg-primary/20">
+      <AddToHomeScreen />
       {/* Background Decorative Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full animate-pulse-subtle" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/5 blur-[120px] rounded-full animate-pulse-subtle" style={{ animationDelay: '1s' }} />

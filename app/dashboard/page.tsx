@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { Users, WifiOff } from "lucide-react";
 import { ContactGrid } from "@/components/dashboard/ContactGrid";
 import { WalletBalance } from "@/components/dashboard/WalletBalance";
 import { QuickActions } from "@/components/dashboard/QuickActions";
@@ -11,9 +11,12 @@ import { useContacts } from "@/hooks/useContacts";
 import { toast } from "sonner";
 import { SendModal } from "@/components/modals/SendModal";
 import { ReceiveModal } from "@/components/modals/ReceiveModal";
+import AddToHomeScreen from "@/components/AddToHomeScreen";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export default function DashboardPage() {
   const { contacts, isLoading: isContactsLoading, addContact, deleteContact } = useContacts();
+  const isOnline = useOnlineStatus();
   
   const [showSendModal, setShowSendModal] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
@@ -28,48 +31,61 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Welcome Section */}
-      <div className="flex flex-col gap-1">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">Welcome back to your seedless wallet.</p>
+    <>
+      {/* Offline Banner */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white p-2 text-center z-40 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 shadow-md">
+          <WifiOff className="h-4 w-4" />
+          <span className="text-sm font-medium">You're offline. Connect to send transactions.</span>
+        </div>
+      )}
+
+      <div className="space-y-8 animate-in fade-in duration-500">
+        {/* Welcome Section */}
+        <div className="flex flex-col gap-1">
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">Welcome back to your seedless wallet.</p>
+        </div>
+
+        {/* Quick Stats / Overview */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <WalletBalance />
+          <QuickActions 
+            onSend={() => setShowSendModal(true)} 
+            onReceive={() => setShowReceiveModal(true)} 
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <RecentActivity />
+
+          <Card className="lg:col-span-3 bg-surface/50 border-white/5 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Contacts</CardTitle>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Users className="w-4 h-4" />
+                <span>{contacts.length}</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ContactGrid
+                contacts={contacts}
+                loading={isContactsLoading}
+                limit={6}
+                onAdd={addContact}
+                onDelete={handleDeleteContact}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Modals */}
+        <SendModal open={showSendModal} onOpenChange={setShowSendModal} />
+        <ReceiveModal open={showReceiveModal} onOpenChange={setShowReceiveModal} />
+        
+        {/* PWA Install Prompt */}
+        <AddToHomeScreen />
       </div>
-
-      {/* Quick Stats / Overview */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <WalletBalance />
-        <QuickActions 
-          onSend={() => setShowSendModal(true)} 
-          onReceive={() => setShowReceiveModal(true)} 
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <RecentActivity />
-
-        <Card className="lg:col-span-3 bg-surface/50 border-white/5 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Contacts</CardTitle>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Users className="w-4 h-4" />
-              <span>{contacts.length}</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ContactGrid
-              contacts={contacts}
-              loading={isContactsLoading}
-              limit={6}
-              onAdd={addContact}
-              onDelete={handleDeleteContact}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Modals */}
-      <SendModal open={showSendModal} onOpenChange={setShowSendModal} />
-      <ReceiveModal open={showReceiveModal} onOpenChange={setShowReceiveModal} />
-    </div>
+    </>
   );
 }
